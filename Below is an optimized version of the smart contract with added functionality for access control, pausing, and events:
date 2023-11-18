@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+
+contract AdvancedSmartContract is Ownable, Pausable {
+    uint256 private data;
+
+    event DataUpdated(uint256 newData);
+
+    constructor(uint256 initialData) {
+        data = initialData;
+    }
+
+    function updateData(uint256 newData) external whenNotPaused onlyOwner {
+        require(newData != data, "New data must be different from current data");
+        data = newData;
+        emit DataUpdated(newData);
+    }
+
+    function getData() external view returns (uint256) {
+        return data;
+    }
+
+    function withdrawBalance() external onlyOwner {
+        address payable ownerWallet = payable(owner());
+        ownerWallet.transfer(address(this).balance);
+    }
+
+    function pauseContract() external onlyOwner {
+        _pause();
+    }
+
+    function unpauseContract() external onlyOwner {
+        _unpause();
+    }
+}
