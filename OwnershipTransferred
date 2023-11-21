@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract EnhancedStorageETH {
+    address public owner;
+    string public storedData;
+    uint256 public creationTimestamp;
+    bool public isLocked;
+
+    event DataStored(address indexed user, string data, uint256 timestamp);
+    event DataDeleted(address indexed deleter, uint256 timestamp);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner, uint256 timestamp);
+    event ContractLocked(uint256 timestamp);
+    event ContractUnlocked(uint256 timestamp);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can call this function");
+        _;
+    }
+
+    modifier notLocked() {
+        require(!isLocked, "Contract is locked and data cannot be modified");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+        creationTimestamp = block.timestamp;
+        isLocked = false;
+    }
+
+    function set(string memory newData) external onlyOwner notLocked {
+        storedData = newData;
+        emit DataStored(msg.sender, newData, block.timestamp);
+    }
+
+    function get() external view returns (string memory) {
+        return storedData;
+    }
+
+    function deleteData() external onlyOwner notLocked {
+        delete storedData;
+        emit DataDeleted(msg.sender, block.timestamp);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "New owner address cannot be zero address");
+        emit OwnershipTransferred(owner, newOwner, block.timestamp);
+        owner = newOwner;
+    }
+
+    function lockContract() external onlyOwner {
+        isLocked = true;
+        emit ContractLocked(block.timestamp);
+    }
+
+    function unlockContract() external onlyOwner {
+        isLocked = false;
+        emit ContractUnlocked(block.timestamp);
+    }
+}
